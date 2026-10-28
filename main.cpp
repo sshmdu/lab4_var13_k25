@@ -58,21 +58,23 @@ double run_once(const std::vector<std::vector<Op>>& per, size_t& sink_out) {
 	Data data;
 	std::vector<size_t> sink(per.size(), 0);
 	auto t0 = std::chrono::steady_clock::now();
-	std::vector<std::jthread> th;
-	for (size_t t = 0; t < per.size(); ++t) {
-		th.emplace_back([&, t] {
-			size_t s = 0;
-			for (Op op : per[t]) {
-				switch (op) {
-				case R0: s += data.read0(); break;
-				case W0: data.write0(1); break;
-				case R1: s += data.read1(); break;
-				case W1: data.write1(1); break;
-				case STR: s += std::string(data).size(); break;
+	{
+		std::vector<std::jthread> th;
+		for (size_t t = 0; t < per.size(); ++t) {
+			th.emplace_back([&, t] {
+				size_t s = 0;
+				for (Op op : per[t]) {
+					switch (op) {
+					case R0: s += data.read0(); break;
+					case W0: data.write0(1); break;
+					case R1: s += data.read1(); break;
+					case W1: data.write1(1); break;
+					case STR: s += std::string(data).size(); break;
+					}
 				}
-			}
-			sink[t] = s;
-			});
+				sink[t] = s;
+				});
+		}
 	}
 	auto t1 = std::chrono::steady_clock::now();
 	sink_out = 0; 
